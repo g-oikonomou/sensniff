@@ -119,7 +119,7 @@ sensniff uses a minimalistic protocol for the communication between the host and
     |                             DATA                              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
- * **MAGIC**: The following 4 bytes (hex): C1 1F FE 52 ('S'+'N' 1F FE 'R')
+ * **MAGIC**: The following 4 bytes (hex): C1 1F FE 52 ('S'+'n' 1F FE 'r')
  * **VERSION**: (1 byte). Currently 1.
  * **CMD**: (1 byte) Command. See below for possible values.
  * **LEN**: (1 byte) Length of the DATA field in number of bytes. Optional.
