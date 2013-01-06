@@ -10,7 +10,7 @@ This tool helps you perform live traffic capture and analysis for IEEE 802.15.4 
 
 Other than network packet capture, the host can send commands to the peripheral to achieve secondary functionality e.g. change radio channel.
 
-sensniff is distributed under the terms of the 3-clause BSD license. See [LICENSE](https://github.com/g-oikonomou/sensniff/master/LICENSE).
+sensniff is distributed under the terms of the 3-clause BSD license. See [LICENSE](https://github.com/g-oikonomou/sensniff/blob/master/LICENSE).
 
 sensniff has been developed and tested on Ubuntu and Mac OS X. sensniff does not work on Windows (and most likely never will).
 
