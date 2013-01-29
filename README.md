@@ -66,7 +66,13 @@ The host-side script will also print out peripheral debugging output. Any data r
 
 Run Wireshark
 -------------
-The host-side tool will convert the frames to PCAP format and pipe them to a FIFO file. All you need to do is to set wireshark to start a capture, using this FIFO file as the capture 'interface'. By default, sensniff will use `/tmp/sensniff`. Thus, in Wireshark, go to `Capture -> Options` and type `/tmp/sensniff` in the `Interface` field. You don't need root priviledges.
+The host-side tool will convert the frames to PCAP format and pipe them to a FIFO file. All you need to do is to set wireshark to start a capture, using this FIFO file as the capture 'interface'. By default, sensniff will use `/tmp/sensniff`. 
+
+Go to Capture -> options -> Manage Interfaces -> New (under Pipes) -> type `/tmp/sensniff` and save. The pipe will then appear as an interface. Start a capture on it.
+
+In older versions of Wireshark, go to Capture -> Options and type `/tmp/sensniff` in the Interface field.
+
+You don't need root priviledges.
 
 The first time your run this, you will need to open Wireshark's preferences and select 'TI CC24xx FCS format' under Protocols -> IEEE 802.15.4. You will also need to correctly configure contexts under 6LoWPAN.
 
