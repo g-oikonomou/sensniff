@@ -384,7 +384,7 @@ class HexdumpHandler(object):
             logger.warn("The error was: %d - %s" % (e.args))
 #####################################
 def arg_parser():
-    speed_choices = (9600, 19200, 38400, 57600, 115200, 230400)
+    speed_choices = (9600, 19200, 38400, 57600, 115200, 230400, 460800)
     debug_choices = ('DEBUG', 'INFO', 'WARN', 'ERROR')
 
     parser = argparse.ArgumentParser(add_help = False,
