@@ -158,12 +158,13 @@ class SerialInputHandler(object):
 
     def read_frame(self):
         try:
+            #self.get_channel()
             # Read the magic + 1 more byte
             b = self.port.read(5)
             size = len(b)
-        except OSError as e:
+        except (IOError, OSError) as e:
             logger.error('Error reading port: %s' % (self.port.port,))
-            logger.error('The error was: %s [%d]' % (e.strerror, e.errno))
+            logger.error('The error was: %s' % (e.args[0],))
             sys.exit(1)
 
         if size == 0:
@@ -189,7 +190,13 @@ class SerialInputHandler(object):
         if b[4] != SNIFFER_PROTO_VERSION:
             # Legacy contiki sniffer support. Will slowly fade away
             size = b[4]
-            b = self.port.read(size)
+            try:
+                b = self.port.read(size)
+            except (IOError, OSError) as e:
+                logger.error('Error reading port: %s' % (self.port.port,))
+                logger.error('The error was: %s' % (e.args[0],))
+                sys.exit(1)
+
             if len(b) != size:
                 # We got the magic right but subsequent bytes did not match
                 # what we expected to receive
@@ -197,13 +204,21 @@ class SerialInputHandler(object):
                 logger.warn('Expected %d bytes, got %d' % (size, len(b)))
                 self.port.flushInput()
                 return ''
+
             logger.info('Read a frame of size %d' % (len(b),))
             stats['Captured'] += 1
             return b
 
         # If we reach here, we have a packet of proto ver SNIFFER_PROTO_VERSION
         # Read CMD and LEN
-        b = self.port.read(2)
+        try:
+            b = self.port.read(2)
+
+        except (IOError, OSError) as e:
+            logger.error('Error reading port: %s' % (self.port.port,))
+            logger.error('The error was: %s' % (e.args[0],))
+            sys.exit(1)
+
         if size < 2:
             logger.warn('Read correct magic not followed by a frame header')
             logger.warn('Expected 2 bytes, got %d' % (len(b), ))
