@@ -246,7 +246,7 @@ class SerialInputHandler(object):
         self.port.write(bytearray([SNIFFER_PROTO_VERSION]))
         self.port.write(cmd)
         self.port.flush()
-        logger.info('Sent bytes: '
+        logger.debug('Sent bytes: '
                     + ''.join('%02x ' % ord(c) for c in self.__sensniff_magic)
                     + ('%02x ' % (SNIFFER_PROTO_VERSION))
                     + ''.join('%02x ' % c for c in cmd))
@@ -315,7 +315,7 @@ class FifoHandler(object):
                     self.needs_pcap_hdr = False
                 self.of.write(data.pcap)
                 self.of.flush()
-                logger.info('Wrote a frame of size %d bytes' % (data.len))
+                logger.debug('Wrote a frame of size %d bytes' % (data.len))
                 stats['Piped'] += 1
             except IOError as e:
                 if e.errno == errno.EPIPE:
