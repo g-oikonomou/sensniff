@@ -146,13 +146,9 @@ class SerialInputHandler(object):
                                       timeout = 0.1)
             self.port.flushInput()
             self.port.flushOutput()
-        except (serial.SerialException, ValueError) as e:
+        except (serial.SerialException, ValueError, IOError) as e:
             logger.error('Error opening port: %s' % (port,))
-            logger.error('The error was: %s' % (e.args[0],))
-            sys.exit(1)
-        except (ValueError, IOError) as e:
-            logger.error('Error configuring port: %s' % (port,))
-            logger.error('The error was: %s' % (e.args[0],))
+            logger.error('The error was: %s' % (e.args,))
             sys.exit(1)
         logger.info('Serial port %s opened' % (self.port.name))
 
@@ -164,7 +160,7 @@ class SerialInputHandler(object):
             size = len(b)
         except (IOError, OSError) as e:
             logger.error('Error reading port: %s' % (self.port.port,))
-            logger.error('The error was: %s' % (e.args[0],))
+            logger.error('The error was: %s' % (e.args,))
             sys.exit(1)
 
         if size == 0:
@@ -194,7 +190,7 @@ class SerialInputHandler(object):
                 b = self.port.read(size)
             except (IOError, OSError) as e:
                 logger.error('Error reading port: %s' % (self.port.port,))
-                logger.error('The error was: %s' % (e.args[0],))
+                logger.error('The error was: %s' % (e.args,))
                 sys.exit(1)
 
             if len(b) != size:
