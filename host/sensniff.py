@@ -113,19 +113,6 @@ class Frame(object):
     def get_hex(self):
         return self.hex
 #####################################
-class DummyInputHandler(object):
-    def __init__(self, line):
-        self.__sensniff_magic = struct.pack('BBBB', 0xC1, 0x1F, 0xFE, 0x72)
-        self.line = line
-        stats['Captured'] = 0
-        logger.info('DummyHandler initialised')
-
-    def read_frame(self):
-        infile = open(self.line, 'rb')
-        for line in infile:
-            stats['Captured'] += 1
-            logger.info('Line input: %s' % (line.rstrip(),))
-            return line
 #####################################
 class SerialInputHandler(object):
     def __init__(self,
@@ -507,7 +494,6 @@ if __name__ == '__main__':
     logger.info('Started logging')
 
     serial_handler = SerialInputHandler(port = args.device, baudrate = args.baud)
-#    serial_handler = DummyInputHandler('/tmp/in')
 
     out_handlers = []
     if args.offline is not True:
