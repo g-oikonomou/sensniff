@@ -493,7 +493,7 @@ if __name__ == '__main__':
 
     logger.info('Started logging')
 
-    serial_handler = SerialInputHandler(port = args.device, baudrate = args.baud)
+    in_handler = SerialInputHandler(port = args.device, baudrate = args.baud)
 
     out_handlers = []
     if args.offline is not True:
@@ -527,7 +527,7 @@ if __name__ == '__main__':
                     if cmd in ('h', '?'):
                         print h
                     elif cmd == 'c':
-                        serial_handler.get_channel()
+                        in_handler.get_channel()
                     elif cmd == 'n':
                         f.needs_pcap_hdr = True
                     elif cmd == 'q':
@@ -535,7 +535,7 @@ if __name__ == '__main__':
                         dump_stats()
                         sys.exit(0)
                     elif int(cmd) in range(11, 27):
-                        serial_handler.set_channel(int(cmd))
+                        in_handler.set_channel(int(cmd))
                     else:
                         raise ValueError
                 else:
@@ -549,7 +549,7 @@ if __name__ == '__main__':
                 pass
 
         try:
-            raw = serial_handler.read_frame()
+            raw = in_handler.read_frame()
             if len(raw) > 0:
                 t = time.time()
                 frame = Frame(raw, t)
