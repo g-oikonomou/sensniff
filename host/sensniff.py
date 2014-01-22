@@ -254,7 +254,7 @@ class SerialInputHandler(object):
     def get_channel(self):
         self.__write_command(bytearray([CMD_GET_CHANNEL]))
 #####################################
-class FifoHandler(object):
+class FifoOutHandler(object):
     def __init__(self, out_fifo):
         self.out_fifo = out_fifo
         self.of = None
@@ -323,7 +323,7 @@ class FifoHandler(object):
                 else:
                     raise
 #####################################
-class PcapDumpHandler(object):
+class PcapDumpOutHandler(object):
     def __init__(self, out_pcap):
         self.out_pcap = out_pcap
         stats['Dumped to PCAP'] = 0
@@ -347,11 +347,11 @@ class PcapDumpHandler(object):
             return
         self.of.write(frame.get_pcap())
         self.of.flush()
-        logger.info('PcapDumpHandler: Dumped a frame of size %d bytes'
+        logger.info('PcapDumpOutHandler: Dumped a frame of size %d bytes'
                      % (frame.len))
         stats['Dumped to PCAP'] += 1
 #####################################
-class HexdumpHandler(object):
+class HexdumpOutHandler(object):
     def __init__(self, of):
         stats['Dumped as Hex'] = 0
         try:
@@ -373,7 +373,7 @@ class HexdumpHandler(object):
             self.of.write('\n')
             self.of.flush()
             stats['Dumped as Hex'] += 1
-            logger.info('HexdumpHandler: Dumped a frame of size %d bytes'
+            logger.info('HexdumpOutHandler: Dumped a frame of size %d bytes'
                          % (frame.len))
         except IOError as e:
             logger.warn("Error writing hex to %s for hex dumps. Skipping"
@@ -496,12 +496,12 @@ if __name__ == '__main__':
 
     out_handlers = []
     if args.offline is not True:
-        f = FifoHandler(out_fifo = args.fifo)
+        f = FifoOutHandler(out_fifo = args.fifo)
         out_handlers.append(f)
     if args.file is not False:
-        out_handlers.append(HexdumpHandler(of = args.file))
+        out_handlers.append(HexdumpOutHandler(of = args.file))
     if args.pcap is not False:
-        out_handlers.append(PcapDumpHandler(args.pcap))
+        out_handlers.append(PcapDumpOutHandler(args.pcap))
 
     if args.non_interactive is False:
         h = StringIO.StringIO()
