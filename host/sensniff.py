@@ -141,7 +141,6 @@ class SerialInputHandler(object):
 
     def read_frame(self):
         try:
-            #self.get_channel()
             # Read the magic + 1 more byte
             b = self.port.read(5)
             size = len(b)
