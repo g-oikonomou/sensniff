@@ -509,14 +509,14 @@ if __name__ == '__main__':
     serial_handler = SerialInputHandler(port = args.device, baudrate = args.baud)
 #    serial_handler = DummyInputHandler('/tmp/in')
 
-    handlers = []
+    out_handlers = []
     if args.offline is not True:
         f = FifoHandler(out_fifo = args.fifo)
-        handlers.append(f)
+        out_handlers.append(f)
     if args.file is not False:
-        handlers.append(HexdumpHandler(of = args.file))
+        out_handlers.append(HexdumpHandler(of = args.file))
     if args.pcap is not False:
-        handlers.append(PcapDumpHandler(args.pcap))
+        out_handlers.append(PcapDumpHandler(args.pcap))
 
     if args.non_interactive is False:
         h = StringIO.StringIO()
@@ -567,7 +567,7 @@ if __name__ == '__main__':
             if len(raw) > 0:
                 t = time.time()
                 frame = Frame(raw, t)
-                for h in handlers:
+                for h in out_handlers:
                     h.handle(frame)
         except (KeyboardInterrupt, SystemExit):
             logger.info('Shutting down')
