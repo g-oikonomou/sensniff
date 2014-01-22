@@ -573,4 +573,3 @@ if __name__ == '__main__':
             logger.info('Shutting down')
             dump_stats()
             sys.exit(0)
-
