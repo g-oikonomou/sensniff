@@ -133,7 +133,7 @@ class SerialInputHandler(object):
                                       timeout = 0.1)
             self.port.flushInput()
             self.port.flushOutput()
-        except (serial.SerialException, ValueError, IOError) as e:
+        except (serial.SerialException, ValueError, IOError, OSError) as e:
             logger.error('Error opening port: %s' % (port,))
             logger.error('The error was: %s' % (e.args,))
             sys.exit(1)
