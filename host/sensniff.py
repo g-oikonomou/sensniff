@@ -54,8 +54,8 @@ __version__ = '0.1 alpha'
 ### Default configuration values
 #####################################
 defaults = {
-    'port': '/dev/ttyUSB0',
-    'port_speed': 115200,
+    'device': '/dev/ttyUSB0',
+    'baud_rate': 115200,
     'out_file': 'sensniff.hexdump',
     'out_fifo': '/tmp/sensniff',
     'out_pcap': 'sensniff.pcap',
@@ -116,8 +116,8 @@ class Frame(object):
 #####################################
 class SerialInputHandler(object):
     def __init__(self,
-                 port = defaults['port'],
-                 baudrate = defaults['port_speed']):
+                 port = defaults['device'],
+                 baudrate = defaults['baud_rate']):
         self.__sensniff_magic_legacy = struct.pack('BBBB', 0x53, 0x6E, 0x69, 0x66)
         self.__sensniff_magic = struct.pack('BBBB', 0xC1, 0x1F, 0xFE, 0x72)
         stats['Captured'] = 0
@@ -394,22 +394,23 @@ def arg_parser():
     in_group = parser.add_argument_group('Input Options')
     in_group.add_argument('-b', '--baud', type = int, action = 'store',
                           choices = speed_choices,
-                          default = defaults['port_speed'],
-                          help = 'Set the line\'s BAUD rate to BAUD \
-                                  (Default: %s)' % (defaults['port_speed'],))
+                          default = defaults['baud_rate'],
+                          help = 'Set the line\'s BAUD rate to BAUD. \
+                                  Only makes sense with -d. \
+                                  (Default: %s)' % (defaults['baud_rate'],))
     in_group.add_argument('-d', '--device', action = 'store',
-                          default = defaults['port'],
+                          default = defaults['device'],
                           help = 'Read from device DEVICE \
-                                  (Default: %s)' % (defaults['port'],))
+                                  (Default: %s)' % (defaults['device'],))
 
     out_group = parser.add_argument_group('Output Options')
-    out_group.add_argument('-f', '--file', action = 'store', nargs = '?',
+    out_group.add_argument('-o', '--out-file', action = 'store', nargs = '?',
                            const = defaults['out_file'], default = False,
-                           help = 'Save the capture (hexdump) file FILE. \
-                                   If -f is specified but FILE is omitted, \
-                                   %s will be used. If the argument is \
+                           help = 'Save the capture (hexdump) file OUT_FILE. \
+                                   If -o is specified but OUT_FILE is omitted, \
+                                   stdout will be used. If the argument is \
                                    omitted altogether, the capture will not \
-                                   be saved.' % (defaults['out_file'],))
+                                   be saved.')
     out_group.add_argument('-p', '--pcap', action = 'store', nargs = '?',
                            const = defaults['out_pcap'], default = False,
                            help = 'Save the capture (pcap format) in PCAP. \
@@ -421,7 +422,7 @@ def arg_parser():
                            default = defaults['out_fifo'],
                            help = 'Pipe the capture through OUTPUT_FIFO \
                                    (Default: %s)' % (defaults['out_fifo'],))
-    out_group.add_argument('-o', '--offline', action = 'store_true',
+    out_group.add_argument('-O', '--offline', action = 'store_true',
                            default = False,
                            help = 'Disable piping (Mainly used for debugging) \
                                    (Default: Piping enabled)')
@@ -498,7 +499,7 @@ if __name__ == '__main__':
     if args.offline is not True:
         f = FifoOutHandler(out_fifo = args.fifo)
         out_handlers.append(f)
-    if args.file is not False:
+    if args.out_file is not False:
         out_handlers.append(HexdumpOutHandler(of = args.file))
     if args.pcap is not False:
         out_handlers.append(PcapDumpOutHandler(args.pcap))
