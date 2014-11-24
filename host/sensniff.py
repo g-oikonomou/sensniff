@@ -420,7 +420,7 @@ def arg_parser():
                                    be saved.' % (defaults['out_pcap'],))
     out_group.add_argument('-F', '--fifo', action = 'store',
                            default = defaults['out_fifo'],
-                           help = 'Pipe the capture through OUTPUT_FIFO \
+                           help = 'Pipe the capture through FIFO \
                                    (Default: %s)' % (defaults['out_fifo'],))
     out_group.add_argument('-O', '--offline', action = 'store_true',
                            default = False,
