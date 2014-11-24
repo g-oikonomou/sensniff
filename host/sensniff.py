@@ -103,7 +103,7 @@ class Frame(object):
 
     def __generate_frame_hdr(self):
         sec = int(self.__t)
-        usec = (self.__t - sec) * 100000
+        usec = (self.__t - sec) * 1000000
         return struct.pack(PCAP_FRAME_HDR_FMT,
                            sec, usec, self.len, self.len)
 
