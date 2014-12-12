@@ -30,9 +30,11 @@ First, you need to have a device with a .15.4 transceiver and you need to progra
 
 ### Sensniff with Contiki
 
-Contiki currently provides sensniff-compatible projects for two hardware platforms:
- * Texas Instruments cc2530 devices. This will work with cc2531 USB dongles as well as cc2530 Evaluation Modules on a SmartRF 05 Evaluation Board `$(CONTIKI)/examples/cc2530dk/sniffer`.
- * Sensinode N601 USB NanoRouters and N740 NanoSensors `$(CONTIKI)/examples/sensinode/sniffer`.
+Contiki currently provides sensniff-compatible projects for the following hardware platforms:
+ * Texas Instruments CC2538 devices. This will work with a CC2538 EM in CDC-ACM mode, as well as with Srf05EB+CC2538EM over UART. `$(CONTIKI)/examples/cc2530dk/sniffer`.
+ * Texas Instruments CC2530 devices. This will work with CC2531 USB dongles as well as CC2530 Evaluation Modules on a SmartRF 05 Evaluation Board `$(CONTIKI)/examples/cc2530dk/sniffer`. Some problems have been reported when using the CC2531 USB dongle. See #5.
+ * Sensinode N601 USB NanoRouters and N740 NanoSensors: `$(CONTIKI)/examples/sensinode/sniffer`. This has not been tested for a while.
+ * Contiki's port for the OpenMote platform also provides a sniffer example. The port is currently under consideration for inclusion in the main Contiki repo.
 
 ### Sensniff Firmware
 
@@ -40,7 +42,7 @@ In the near future, sensniff will also provide sources for a series of wireless 
 
 Run the Host Tool
 -----------------
-The host-side tool assumes that the peripheral appears as a serial port on the host PC. If your embedded device has a native USB interface, it will have to enumerate as a CDC-ACM device (e.g. the cc2531 USB dongle running the Contiki sniffer example).
+The host-side tool assumes that the peripheral appears as a serial port on the host PC. If your embedded device has a native USB interface, it will have to enumerate as a CDC-ACM device (e.g. the CC2531 USB dongle running the Contiki sniffer example).
 
 The best way to start:
 `python sensniff.py -h`
@@ -66,7 +68,7 @@ The host-side script will also print out peripheral debugging output. Any data r
 
 Run Wireshark
 -------------
-The host-side tool will convert the frames to PCAP format and pipe them to a FIFO file. All you need to do is to set wireshark to start a capture, using this FIFO file as the capture 'interface'. By default, sensniff will use `/tmp/sensniff`. 
+The host-side tool will convert the frames to PCAP format and pipe them to a FIFO file. All you need to do is to set wireshark to start a capture, using this FIFO file as the capture 'interface'. By default, sensniff will use `/tmp/sensniff`.
 
 Go to Capture -> options -> Manage Interfaces -> New (under Pipes) -> type `/tmp/sensniff` and save. The pipe will then appear as an interface. Start a capture on it.
 
