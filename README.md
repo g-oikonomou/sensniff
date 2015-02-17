@@ -31,7 +31,7 @@ First, you need to have a device with a .15.4 transceiver and you need to progra
 ### Sensniff with Contiki
 
 Contiki currently provides sensniff-compatible projects for the following hardware platforms:
- * Texas Instruments CC2538 devices. This will work with a CC2538 EM in CDC-ACM mode, as well as with Srf05EB+CC2538EM over UART. `$(CONTIKI)/examples/cc2530dk/sniffer`.
+ * Texas Instruments CC2538 devices. This will work with a CC2538 EM in CDC-ACM mode, as well as with Srf06EB+CC2538EM over UART. `$(CONTIKI)/examples/cc2538dk/sniffer`.
  * Texas Instruments CC2530 devices. This will work with CC2531 USB dongles as well as CC2530 Evaluation Modules on a SmartRF 05 Evaluation Board `$(CONTIKI)/examples/cc2530dk/sniffer`. Some problems have been reported when using the CC2531 USB dongle. See #5.
  * Sensinode N601 USB NanoRouters and N740 NanoSensors: `$(CONTIKI)/examples/sensinode/sniffer`. This has not been tested for a while.
  * Contiki's port for the OpenMote platform also provides a sniffer example. The port is currently under consideration for inclusion in the main Contiki repo.
