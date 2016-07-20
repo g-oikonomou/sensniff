@@ -55,7 +55,7 @@ __version__ = '0.1 alpha'
 #####################################
 defaults = {
     'device': '/dev/ttyUSB0',
-    'baud_rate': 115200,
+    'baud_rate': 460800,
     'out_file': 'sensniff.hexdump',
     'out_fifo': '/tmp/sensniff',
     'out_pcap': 'sensniff.pcap',
