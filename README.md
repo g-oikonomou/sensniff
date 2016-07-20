@@ -124,15 +124,16 @@ sensniff uses a minimalistic protocol for the communication between the host and
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                             MAGIC                             |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |    VERSION    |      CMD      |      LEN      +               |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+               +
+    |    VERSION    |      CMD      |              LEN              |
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
     |                             DATA                              |
     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
- * **MAGIC**: The following 4 bytes (hex): C1 1F FE 52 ('S'+'n' 1F FE 'r')
- * **VERSION**: (1 byte). Currently 1.
+ * **MAGIC**: The following 4 bytes (hex): C1 1F FE 72 ('S'+'n' 1F FE 'r')
+ * **VERSION**: (1 byte). Currently 2.
  * **CMD**: (1 byte) Command. See below for possible values.
- * **LEN**: (1 byte) Length of the DATA field in number of bytes. Optional.
+ * **LEN**: (2 bytes) Length of the DATA field in number of bytes. Optional.
+ Network byte order.
  * **DATA**: Variable length specified in LEN. Only transmitted if LEN exists and has value > 0. Contains the payload, depending on the value of CMD.
 
 Commands
@@ -142,15 +143,10 @@ Generally speaking, frames with the MS bit of the CMD field set are host-to-peri
 The CMD field can take the following values:
    * **CMD==0x00 (CMD_FRAME)**: LEN will contain the length of a captured .15.4 frame. DATA will contain the frame itself, including the .15.4 MAC layer header, payload and FCS. This command is peripheral-initiated.
    * **CMD==0x01 (CMD_CHANNEL)**: The current RF channel used by the peripheral's transceiver. LEN will be 1. DATA will be 1 byte long and will contain the value of the channel. Valid values in [11,26]. Packets of this type are always a response to either CMD_GET_CHANNEL or CMD_SET_CHANNEL.
+   * **CMD==0x02 (CMD_CHANNEL_MIN)**: The minimum RF channel supported by the peripheral's transceiver. LEN will be 1. DATA will be 1 byte long and will contain the value of the channel. Packets of this type are a response to CMD_GET_CHANNEL_MIN.
+   * **CMD==0x03 (CMD_CHANNEL_MAX)**: The maximum RF channel supported by the peripheral's transceiver. LEN will be 1. DATA will be 1 byte long and will contain the value of the channel. Packets of this type are a response to CMD_GET_CHANNEL_MAX.
+   * **CMD==0x7F (CMD_ERR_NOT_SUPPORTED)**: The peripheral parsed the command successfully, but it could not execute it. A typical example of when this could happen is when a CMD_SET_CHANNEL requested a channel outside the range supported by the peripheral.
    * **CMD==0x81 (CMD_GET_CHANNEL)**: Used by the host to query the current radio channel used by the peripheral's RF chip. LEN and DATA are omitted. The Peripheral will respond with a CMD_CHANNEL.
-   * **CMD==0x82 (CMD_SET_CHANNEL)**: Used by the host to request a change to a new radio channel. LEN will be 1. DATA will be 1 byte long and will contain the value of the new channel. Valid values in [11,26]. The peripheral will respond with a CMD_CHANNEL.
-
-Open Issues
-===========
-sensniff does not perform any error checking. Thus, if a frame appears broken on wireshark:
- * It may have been sent incorrectly by the originator
- * It may have been received incorrectly by the sniffer
- * It may have broken during the peripheral-to-host transfer
- * It may have broken during the host-to-wireshark piping (very unlikely)
-
-There is no way of knowing which of the above is the cause.
+   * **CMD==0x82 (CMD_GET_CHANNEL_MIN)**: Used by the host to query the minimum radio channel supported by the peripheral's RF chip. LEN and DATA are omitted. The Peripheral will respond with a CMD_CHANNEL_MIN.
+   * **CMD==0x83 (CMD_GET_CHANNEL_MAX)**: Used by the host to query the maximum radio channel supported by the peripheral's RF chip. LEN and DATA are omitted. The Peripheral will respond with a CMD_CHANNEL_MAX.
+   * **CMD==0x84 (CMD_SET_CHANNEL)**: Used by the host to request a change to a new radio channel. LEN will be 1. DATA will be 1 byte long and will contain the value of the new channel. Valid values depend on the peripheral and can be retrieved through CMD_GET_CHANNEL_MIN & CMD_GET_CHANNEL_MAX. The peripheral will respond with a CMD_CHANNEL.
