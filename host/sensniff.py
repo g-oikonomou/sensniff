@@ -79,11 +79,16 @@ NETWORK = LINKTYPE_IEEE802_15_4
 PCAP_GLOBAL_HDR_FMT = '<LHHlLLL'
 PCAP_FRAME_HDR_FMT = '<LLLL'
 
-CMD_FRAME = 0x00
-CMD_CHANNEL = 0x01
-CMD_GET_CHANNEL = 0x81
-CMD_SET_CHANNEL = 0x82
-SNIFFER_PROTO_VERSION = 1
+CMD_FRAME             = 0x00
+CMD_CHANNEL           = 0x01
+CMD_CHANNEL_MIN       = 0x02
+CMD_CHANNEL_MAX       = 0x03
+CMD_ERR_NOT_SUPPORTED = 0x7F
+CMD_GET_CHANNEL       = 0x81
+CMD_GET_CHANNEL_MIN   = 0x82
+CMD_GET_CHANNEL_MAX   = 0x83
+CMD_SET_CHANNEL       = 0x84
+SNIFFER_PROTO_VERSION = 2
 #####################################
 ### Globals
 #####################################
@@ -118,8 +123,8 @@ class SerialInputHandler(object):
     def __init__(self,
                  port = defaults['device'],
                  baudrate = defaults['baud_rate']):
-        self.__sensniff_magic_legacy = struct.pack('BBBB', 0x53, 0x6E, 0x69, 0x66)
-        self.__sensniff_magic = struct.pack('BBBB', 0xC1, 0x1F, 0xFE, 0x72)
+        self.__sensniff_magic_legacy = bytearray((0x53, 0x6E, 0x69, 0x66))
+        self.__sensniff_magic = bytearray((0xC1, 0x1F, 0xFE, 0x72))
         stats['Captured'] = 0
         stats['Non-Frame'] = 0
         try:
@@ -194,22 +199,26 @@ class SerialInputHandler(object):
         # If we reach here, we have a packet of proto ver SNIFFER_PROTO_VERSION
         # Read CMD and LEN
         try:
-            b = self.port.read(2)
+            b = self.port.read(3)
 
         except (IOError, OSError) as e:
             logger.error('Error reading port: %s' % (self.port.port,))
             logger.error('The error was: %s' % (e.args[0],))
             sys.exit(1)
 
-        if size < 2:
+        if size < 3:
             logger.warn('Read correct magic not followed by a frame header')
-            logger.warn('Expected 2 bytes, got %d' % (len(b), ))
+            logger.warn('Expected 3 bytes, got %d' % (len(b), ))
             self.port.flushInput()
             return ''
 
         b = bytearray(b)
         cmd = b[0]
-        length = b[1]
+        length = b[1] << 8 | b[2]
+
+        if cmd == CMD_ERR_NOT_SUPPORTED:
+            logger.warn("Peripheral reports unsupported command")
+            return ''
 
         # Read the frame or command response
         b = self.port.read(length)
@@ -230,29 +239,44 @@ class SerialInputHandler(object):
         # If we reach here, we have a command response
         b = bytearray(b)
         logger.info('Received a command response: [%02x %02x]' % (cmd, b[0]))
+        # We'll only ever see one of these if the user asked for it, so we are
+        # running interactive. Print away
         if cmd == CMD_CHANNEL:
-            # We'll only ever see this if the user asked for it, so we are
-            # running interactive. Print away
-            print 'Sniffing in channel: %d' % (b[0],)
+            print('Sniffing in channel: %d' % (b[0],))
+        elif cmd == CMD_CHANNEL_MIN:
+            print 'Min channel: %d' % (b[0],)
+        elif cmd == CMD_CHANNEL_MAX:
+            print 'Max channel: %d' % (b[0],)
         else:
             logger.warn("Received a command response with unknown code")
         return ''
 
-    def __write_command(self, cmd):
+    def __write_command(self, cmd, len = 0, data = bytearray()):
+        bytes = bytearray((SNIFFER_PROTO_VERSION, cmd))
+        if len > 0:
+            bytes += bytearray((len >> 8, len & 0xFF))
+        if data is not None:
+            bytes += data
+
         self.port.write(self.__sensniff_magic)
-        self.port.write(bytearray([SNIFFER_PROTO_VERSION]))
-        self.port.write(cmd)
+        self.port.write(bytes)
         self.port.flush()
-        logger.debug('Sent bytes: '
-                    + ''.join('%02x ' % ord(c) for c in self.__sensniff_magic)
-                    + ('%02x ' % (SNIFFER_PROTO_VERSION))
-                    + ''.join('%02x ' % c for c in cmd))
+        logger.info('Sent bytes: ' +
+                    ''.join('%02x ' % c for c in self.__sensniff_magic) +
+                    ''.join('%02x ' % c for c in bytes))
 
     def set_channel(self, channel):
-        self.__write_command(bytearray([CMD_SET_CHANNEL, 1, channel]))
+        self.__write_command(CMD_SET_CHANNEL, 1, bytearray((channel,)))
 
     def get_channel(self):
-        self.__write_command(bytearray([CMD_GET_CHANNEL]))
+        self.__write_command(CMD_GET_CHANNEL)
+
+    def get_channel_min(self):
+        self.__write_command(CMD_GET_CHANNEL_MIN)
+
+    def get_channel_max(self):
+        self.__write_command(CMD_GET_CHANNEL_MAX)
+
 #####################################
 class FifoOutHandler(object):
     def __init__(self, out_fifo):
@@ -508,9 +532,11 @@ if __name__ == '__main__':
         h = StringIO.StringIO()
         h.write('Commands:\n')
         h.write('c: Print current RF Channel\n')
+        h.write('m: Print Min RF Channel\n')
+        h.write('M: Print Max RF Channel\n')
         h.write('n: Trigger new pcap header before the next frame\n')
         h.write('h,?: Print this message\n')
-        h.write('[11,26]: Change RF channel\n')
+        h.write('<number>: Change RF channel.\n')
         h.write('q: Quit')
         h = h.getvalue()
 
@@ -522,19 +548,23 @@ if __name__ == '__main__':
         if args.non_interactive is False:
             try:
                 if select.select([sys.stdin, ], [], [], 0.0)[0]:
-                    cmd = sys.stdin.readline().rstrip()
-                    logger.debug('User input: "%s"' % (cmd,))
+                    cmd = sys.stdin.readline().strip()
+                    logger.info('User input: "%s"' % (cmd,))
                     if cmd in ('h', '?'):
                         print h
                     elif cmd == 'c':
                         in_handler.get_channel()
+                    elif cmd == 'm':
+                        in_handler.get_channel_min()
+                    elif cmd == 'M':
+                        in_handler.get_channel_max()
                     elif cmd == 'n':
                         f.needs_pcap_hdr = True
                     elif cmd == 'q':
                         logger.info('User requested shutdown')
                         dump_stats()
                         sys.exit(0)
-                    elif int(cmd) in range(11, 27):
+                    elif int(cmd) in range(0, 0xFFFF):
                         in_handler.set_channel(int(cmd))
                     else:
                         raise ValueError
