@@ -122,7 +122,8 @@ class Frame(object):
 class SerialInputHandler(object):
     def __init__(self,
                  port = defaults['device'],
-                 baudrate = defaults['baud_rate']):
+                 baudrate = defaults['baud_rate'],
+                 rts_cts = False):
         self.__sensniff_magic_legacy = bytearray((0x53, 0x6E, 0x69, 0x66))
         self.__sensniff_magic = bytearray((0xC1, 0x1F, 0xFE, 0x72))
         stats['Captured'] = 0
@@ -134,7 +135,7 @@ class SerialInputHandler(object):
                                       parity = serial.PARITY_NONE,
                                       stopbits = serial.STOPBITS_ONE,
                                       xonxoff = False,
-                                      rtscts = False,
+                                      rtscts = rts_cts,
                                       timeout = 0.1)
             self.port.flushInput()
             self.port.flushOutput()
@@ -426,6 +427,10 @@ def arg_parser():
                           default = defaults['device'],
                           help = 'Read from device DEVICE \
                                   (Default: %s)' % (defaults['device'],))
+    in_group.add_argument('-r', '--rts-cts', action = 'store_true',
+                          default = False,
+                          help = 'Set to enable H/W flow control \
+                                  (Default: Flow control disabled.)')
 
     out_group = parser.add_argument_group('Output Options')
     out_group.add_argument('-o', '--out-file', action = 'store', nargs = '?',
@@ -517,7 +522,8 @@ if __name__ == '__main__':
 
     logger.info('Started logging')
 
-    in_handler = SerialInputHandler(port = args.device, baudrate = args.baud)
+    in_handler = SerialInputHandler(port = args.device, baudrate = args.baud,
+                                    rts_cts = args.rts_cts)
 
     out_handlers = []
     if args.offline is not True:
