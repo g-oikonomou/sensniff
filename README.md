@@ -38,7 +38,7 @@ Contiki currently provides a sensniff example that supports a very wide variety 
 
 ### Sensniff Firmware
 
-In the future, sensniff will also provide sources for a series of wireless sensor platforms. The first platforms to be supported will be the same as those with examples in the Contiki source tree (see above). These will slowly start appearing in the `peripheral/` directory.
+In the future, sensniff will also provide sources for a series of wireless sensor platforms. The first platforms to be supported will be the same as those with examples in the Contiki source tree (see above). These will be distributed through a separate repo.
 
 Run the Host Tool
 -----------------
