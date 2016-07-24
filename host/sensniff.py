@@ -549,6 +549,8 @@ if __name__ == '__main__':
         e = 'Unknown Command. Type h or ? for help'
 
         print h
+        
+        in_handler.get_channel()
 
     while 1:
         if args.non_interactive is False:
