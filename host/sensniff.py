@@ -416,7 +416,7 @@ def arg_parser():
     can also be saved in a file in hexdump and/or pcap format for offline \
     analysis.')
 
-    in_group = parser.add_argument_group('Input Options')
+    in_group = parser.add_argument_group('Serial Line Options')
     in_group.add_argument('-b', '--baud', type = int, action = 'store',
                           choices = speed_choices,
                           default = defaults['baud_rate'],
