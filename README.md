@@ -30,15 +30,15 @@ First, you need to have a device with a .15.4 transceiver and you need to progra
 
 ### Sensniff with Contiki
 
-Contiki currently provides sensniff-compatible projects for the following hardware platforms:
- * Texas Instruments CC2538 devices. This will work with a CC2538 EM in CDC-ACM mode, as well as with Srf06EB+CC2538EM over UART. `$(CONTIKI)/examples/cc2538dk/sniffer`.
- * Texas Instruments CC2530 devices. This will work with CC2531 USB dongles as well as CC2530 Evaluation Modules on a SmartRF 05 Evaluation Board `$(CONTIKI)/examples/cc2530dk/sniffer`. Some problems have been reported when using the CC2531 USB dongle. See #5.
- * Sensinode N601 USB NanoRouters and N740 NanoSensors: `$(CONTIKI)/examples/sensinode/sniffer`. This has not been tested for a while.
- * Contiki's port for the OpenMote platform also provides a sniffer example. The port is currently under consideration for inclusion in the main Contiki repo.
+Contiki currently provides a sensniff example that supports a very wide variety of hardware platforms, including but not limited to:
+ * Texas Instruments CC2538 devices. This will work with a CC2538 EM in CDC-ACM mode, as well as with Srf06EB+CC2538EM over UART.
+ * Texas Instruments CC2530 devices. This will work with CC2531 USB dongles as well as CC2530 Evaluation Modules on a SmartRF 05 Evaluation Board.
+ * Zolertia Zoul, in 2.4GHz as well as in sub-ghz mode.
+ * Texas Instruments CC13xx/CC26xx platforms, such as Launchpads and Srf06+CC13xx/CC26xx EMs
 
 ### Sensniff Firmware
 
-In the near future, sensniff will also provide sources for a series of wireless sensor platforms. The first platforms to be supported will be the same as those with examples in the Contiki source tree (see above). These will slowly start appearing in the `peripheral/` directory.
+In the future, sensniff will also provide sources for a series of wireless sensor platforms. The first platforms to be supported will be the same as those with examples in the Contiki source tree (see above). These will slowly start appearing in the `peripheral/` directory.
 
 Run the Host Tool
 -----------------
@@ -91,24 +91,6 @@ For Host-Peripheral communication, sensniff uses its own minimalistic protocol. 
 Host-Side Script
 ----------------
 The host-side script has been tested extensively and should work without major issues. It supports both versions of the sensniff protocol but the legacy version will be removed without any notice.
-
-Peripheral-Side
----------------
-**The examples in the Contiki tree currently use the legacy protocol version**
-
-This means that:
- * Only frame capturing is supported. Host-to-Peripheral commands are not.
- * The frame format is different to what is documented in this page.
-
-Both examples are going to get updated to the current protocol version in the very short term. As a result of this, they will also support host-initiated commands. Once these changes have been merged with Contiki's upstream, support for the legacy protocol will disappear.
-
-How to add support for your Device
-==================================
-If your device is supported by Contiki, things are pretty simple:
- * Open `$(CONTIKI)/cpu/cc253x/dev/cc2530-rf.c`. Look for the lines wrapped inside `CC2530_RF_CONF_HEXDUMP` and this will make it obvious what you need to do to your own device's radio driver.
- * Copy `$(CONTIKI)/examples/cc2530dk/sniffer` to a new example directory. `netstack.c` and `stub-rdc.c` will not need modified. Slight changes may be needed in `sniffer.c` to turn off the frame filtering functionality of your RF chip.
-
-Make sure you have read the 'Project Status' section of this README.
 
 How to Contribute
 =================
