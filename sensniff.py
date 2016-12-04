@@ -106,8 +106,8 @@ class Frame(object):
 
         self.__pcap_hdr = self.__generate_frame_hdr()
 
-        self.pcap = self.__pcap_hdr + self.__raw
-        self.hex = ''.join('%02x ' % ord(c) for c in self.__raw).rstrip()
+        self.pcap = bytearray(self.__pcap_hdr) + self.__raw
+        self.hex = ''.join('%02x ' % c for c in self.__raw).rstrip()
 
     def __generate_frame_hdr(self):
         sec = int(self.__t)
@@ -576,7 +576,7 @@ if __name__ == '__main__':
             raw = in_handler.read_frame()
             if len(raw) > 0:
                 t = time.time()
-                frame = Frame(raw, t)
+                frame = Frame(bytearray(raw), t)
                 for h in out_handlers:
                     h.handle(frame)
         except (KeyboardInterrupt, SystemExit):
