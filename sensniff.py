@@ -245,9 +245,9 @@ class SerialInputHandler(object):
         if cmd == CMD_CHANNEL:
             print('Sniffing in channel: %d' % (b[0],))
         elif cmd == CMD_CHANNEL_MIN:
-            print 'Min channel: %d' % (b[0],)
+            print('Min channel: %d' % (b[0],))
         elif cmd == CMD_CHANNEL_MAX:
-            print 'Max channel: %d' % (b[0],)
+            print('Max channel: %d' % (b[0],))
         else:
             logger.warn("Received a command response with unknown code")
         return ''
@@ -546,8 +546,8 @@ if __name__ == '__main__':
 
         e = 'Unknown Command. Type h or ? for help'
 
-        print h
-        
+        print(h)
+
         in_handler.get_channel()
 
     while 1:
@@ -557,7 +557,7 @@ if __name__ == '__main__':
                     cmd = sys.stdin.readline().strip()
                     logger.info('User input: "%s"' % (cmd,))
                     if cmd in ('h', '?'):
-                        print h
+                        print(h)
                     elif cmd == 'c':
                         in_handler.get_channel()
                     elif cmd == 'm':
@@ -579,7 +579,7 @@ if __name__ == '__main__':
             except select.error:
                 logger.warn('Error while trying to read stdin')
             except ValueError:
-                print e
+                print(e)
             except UnboundLocalError:
                 # Raised by command 'n' when -o was specified at command line
                 pass
