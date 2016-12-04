@@ -78,6 +78,10 @@ NETWORK = LINKTYPE_IEEE802_15_4
 PCAP_GLOBAL_HDR_FMT = '<LHHlLLL'
 PCAP_FRAME_HDR_FMT = '<LLLL'
 
+pcap_global_hdr = bytearray(struct.pack(PCAP_GLOBAL_HDR_FMT, MAGIC_NUMBER,
+                                        VERSION_MAJOR, VERSION_MINOR,
+                                        THISZONE, SIGFIGS, SNAPLEN, NETWORK))
+
 CMD_FRAME             = 0x00
 CMD_CHANNEL           = 0x01
 CMD_CHANNEL_MIN       = 0x02
@@ -284,9 +288,6 @@ class FifoOutHandler(object):
         self.needs_pcap_hdr = True
         stats['Piped'] = 0
         stats['Not Piped'] = 0
-        self.__pcap_global_hdr = struct.pack(
-            PCAP_GLOBAL_HDR_FMT, MAGIC_NUMBER, VERSION_MAJOR, VERSION_MINOR,
-            THISZONE, SIGFIGS, SNAPLEN, NETWORK)
 
         self.__create_fifo()
 
@@ -331,7 +332,7 @@ class FifoOutHandler(object):
         if self.of is not None:
             try:
                 if self.needs_pcap_hdr is True:
-                    self.of.write(self.__pcap_global_hdr)
+                    self.of.write(pcap_global_hdr)
                     self.needs_pcap_hdr = False
                 self.of.write(data.pcap)
                 self.of.flush()
@@ -350,13 +351,10 @@ class PcapDumpOutHandler(object):
     def __init__(self, out_pcap):
         self.out_pcap = out_pcap
         stats['Dumped to PCAP'] = 0
-        self.__pcap_global_hdr = struct.pack(
-            PCAP_GLOBAL_HDR_FMT, MAGIC_NUMBER, VERSION_MAJOR, VERSION_MINOR,
-            THISZONE, SIGFIGS, SNAPLEN, NETWORK)
 
         try:
             self.of = open(self.out_pcap, 'w')
-            self.of.write(self.__pcap_global_hdr)
+            self.of.write(pcap_global_hdr)
             logger.info("Dumping PCAP to %s" % (self.out_pcap,))
         except IOError as e:
             self.of = None
