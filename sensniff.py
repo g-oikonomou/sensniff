@@ -155,7 +155,6 @@ class SerialInputHandler(object):
             sys.exit(1)
 
         if size == 0:
-            logger.debug('No frame input')
             return b
         if size < 5:
             logger.warn('Read %d bytes but not part of a frame'
@@ -238,7 +237,7 @@ class SerialInputHandler(object):
 
         # If we reach here, we have a command response
         b = bytearray(b)
-        logger.info('Received a command response: [%02x %02x]' % (cmd, b[0]))
+        logger.debug('Received a command response: [%02x %02x]' % (cmd, b[0]))
         # We'll only ever see one of these if the user asked for it, so we are
         # running interactive. Print away
         if cmd == CMD_CHANNEL:
@@ -261,9 +260,10 @@ class SerialInputHandler(object):
         self.port.write(self.__sensniff_magic)
         self.port.write(bytes)
         self.port.flush()
-        logger.info('Sent bytes: ' +
-                    ''.join('%02x ' % c for c in self.__sensniff_magic) +
-                    ''.join('%02x ' % c for c in bytes))
+        logger.debug('Sent bytes: [' +
+                     ''.join('%02x ' % c for c in self.__sensniff_magic) +
+                     ''.join('%02x ' % c for c in bytes).rstrip() +
+                     ']')
 
     def set_channel(self, channel):
         self.__write_command(CMD_SET_CHANNEL, 1, bytearray((channel,)))
@@ -336,7 +336,7 @@ class FifoOutHandler(object):
                     self.needs_pcap_hdr = False
                 self.of.write(data.pcap)
                 self.of.flush()
-                logger.debug('Wrote a frame of size %d bytes' % (data.len))
+                logger.info('Wrote a frame of size %d bytes' % (data.len))
                 stats['Piped'] += 1
             except IOError as e:
                 if e.errno == errno.EPIPE:
@@ -567,8 +567,6 @@ if __name__ == '__main__':
                         in_handler.set_channel(int(cmd))
                     else:
                         raise ValueError
-                else:
-                    logger.debug('No user input')
             except select.error:
                 logger.warn('Error while trying to read stdin')
             except ValueError:
