@@ -378,7 +378,7 @@ class HexdumpOutHandler(object):
     def __init__(self, of):
         stats['Dumped as Hex'] = 0
         try:
-            self.of = open(of, 'wb')
+            self.of = open(of, 'w')
             logger.info("Dumping hex to %s" % (of,))
         except IOError as e:
             logger.warn("Error opening %s for hex dumps. Skipping"
