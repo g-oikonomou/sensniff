@@ -117,7 +117,6 @@ class Frame(object):
     def get_hex(self):
         return self.hex
 #####################################
-#####################################
 class SerialInputHandler(object):
     def __init__(self,
                  port = defaults['device'],
