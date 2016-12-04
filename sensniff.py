@@ -353,7 +353,7 @@ class PcapDumpOutHandler(object):
         stats['Dumped to PCAP'] = 0
 
         try:
-            self.of = open(self.out_pcap, 'w')
+            self.of = open(self.out_pcap, 'wb')
             self.of.write(pcap_global_hdr)
             logger.info("Dumping PCAP to %s" % (self.out_pcap,))
         except IOError as e:
