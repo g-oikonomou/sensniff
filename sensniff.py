@@ -309,7 +309,7 @@ class FifoOutHandler(object):
     def __open_fifo(self):
         try:
             fd = os.open(self.out_fifo, os.O_NONBLOCK | os.O_WRONLY)
-            self.of = os.fdopen(fd, 'w')
+            self.of = os.fdopen(fd, 'wb')
         except OSError as e:
             if e.errno == errno.ENXIO:
                 logger.warn('Remote end not reading')
