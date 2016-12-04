@@ -520,7 +520,7 @@ if __name__ == '__main__':
         f = FifoOutHandler(out_fifo = args.fifo)
         out_handlers.append(f)
     if args.out_file is not False:
-        out_handlers.append(HexdumpOutHandler(of = args.file))
+        out_handlers.append(HexdumpOutHandler(of = args.out_file))
     if args.pcap is not False:
         out_handlers.append(PcapDumpOutHandler(args.pcap))
 
