@@ -406,7 +406,6 @@ class HexdumpOutHandler(object):
             logger.warn("The error was: %d - %s" % (e.args))
 #####################################
 def arg_parser():
-    speed_choices = (9600, 19200, 38400, 57600, 115200, 230400, 460800)
     debug_choices = ('DEBUG', 'INFO', 'WARN', 'ERROR')
 
     parser = argparse.ArgumentParser(add_help = False,
@@ -418,9 +417,8 @@ def arg_parser():
 
     in_group = parser.add_argument_group('Serial Line Options')
     in_group.add_argument('-b', '--baud', type = int, action = 'store',
-                          choices = speed_choices,
                           default = defaults['baud_rate'],
-                          help = 'Set the line\'s BAUD rate to BAUD. \
+                          help = 'Set the line\'s baudrate to BAUD. \
                                   Only makes sense with -d. \
                                   (Default: %s)' % (defaults['baud_rate'],))
     in_group.add_argument('-d', '--device', action = 'store',
