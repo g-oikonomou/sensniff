@@ -165,7 +165,7 @@ class SerialInputHandler(object):
         if b[0:4] not in (self.__sensniff_magic, self.__sensniff_magic_legacy):
             # Peripheral UART output - print it
             per_out = self.port.readline().rstrip()
-            logger.info("Peripheral: %s%s" % (b, per_out))
+            logger.info("Peripheral: %s%s" % (b.decode(), per_out.decode()))
             stats['Non-Frame'] += 1
             return ''
 
