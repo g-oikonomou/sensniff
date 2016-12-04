@@ -42,7 +42,6 @@ import select
 import time
 import stat
 import errno
-import StringIO
 import logging
 import logging.handlers
 import struct
@@ -489,13 +488,9 @@ def arg_parser():
     return parser.parse_args()
 #####################################
 def dump_stats():
-    s = StringIO.StringIO()
-
-    s.write('Frame Stats:\n')
-    for k, v in stats.items():
-        s.write('%20s: %d\n' % (k, v))
-
-    print(s.getvalue())
+    print('Frame Stats:')
+    for k, v in list(stats.items()):
+        print('%20s: %d' % (k, v))
 #####################################
 def log_init():
     logger.setLevel(logging.DEBUG)
@@ -533,16 +528,14 @@ if __name__ == '__main__':
         out_handlers.append(PcapDumpOutHandler(args.pcap))
 
     if args.non_interactive is False:
-        h = StringIO.StringIO()
-        h.write('Commands:\n')
-        h.write('c: Print current RF Channel\n')
-        h.write('m: Print Min RF Channel\n')
-        h.write('M: Print Max RF Channel\n')
-        h.write('n: Trigger new pcap header before the next frame\n')
-        h.write('h,?: Print this message\n')
-        h.write('<number>: Change RF channel.\n')
-        h.write('q: Quit')
-        h = h.getvalue()
+        h = ("Commands:\n"
+             "c: Print current RF Channel\n"
+             "m: Print Min RF Channel\n"
+             "M: Print Max RF Channel\n"
+             "n: Trigger new pcap header before the next frame\n"
+             "h,?: Print this message\n"
+             "<number>: Change RF channel.\n"
+             "q: Quit")
 
         e = 'Unknown Command. Type h or ? for help'
 
