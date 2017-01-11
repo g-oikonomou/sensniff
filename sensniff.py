@@ -45,23 +45,43 @@ import errno
 import logging
 import logging.handlers
 import struct
+import platform
+if platform.system() == 'Windows':
+	import win32pipe, win32file
+	import subprocess
+	
+	#open Wireshark
+	wireshark_cmd=['C:\Program Files\Wireshark\Wireshark.exe', r'-i\\.\pipe\wireshark','-k']
+	proc=subprocess.Popen(wireshark_cmd)
 #####################################
 ### Constants
 #####################################
-__version__ = '1.2'
+__version__ = '1.2.1'
 #####################################
 ### Default configuration values
 #####################################
-defaults = {
-    'device': '/dev/ttyUSB0',
-    'baud_rate': 460800,
-    'out_file': 'sensniff.hexdump',
-    'out_fifo': '/tmp/sensniff',
-    'out_pcap': 'sensniff.pcap',
-    'debug_level': 'WARN',
-    'log_level': 'INFO',
-    'log_file': 'sensniff.log',
-}
+if platform.system() == 'Windows':
+	defaults = {
+		'device': 'COM1',
+		'baud_rate': 460800,
+		'out_file': 'sensniff.hexdump',
+		'out_fifo': '/tmp/sensniff',
+		'out_pcap': 'sensniff.pcap',
+		'debug_level': 'WARN',
+		'log_level': 'INFO',
+		'log_file': 'sensniff.log',
+	}
+else:
+	defaults = {
+		'device': '/dev/ttyUSB0',
+		'baud_rate': 460800,
+		'out_file': 'sensniff.hexdump',
+		'out_fifo': '/tmp/sensniff',
+		'out_pcap': 'sensniff.pcap',
+		'debug_level': 'WARN',
+		'log_level': 'INFO',
+		'log_file': 'sensniff.log',
+	}
 #####################################
 ### PCAP and Command constants
 #####################################
@@ -289,7 +309,25 @@ class FifoOutHandler(object):
         stats['Piped'] = 0
         stats['Not Piped'] = 0
 
-        self.__create_fifo()
+        if platform.system() == 'Windows' :
+			try:
+				pipe = win32pipe.CreateNamedPipe(
+					r'\\.\pipe\wireshark',
+					win32pipe.PIPE_ACCESS_OUTBOUND,
+					win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_WAIT,
+					1, 65536, 65536,
+					300,
+					None)
+				print "Pipe correctly created"
+				#proc=subprocess.Popen(wireshark_cmd)
+				#print "Wireshark opened"
+				win32pipe.ConnectNamedPipe(pipe, None)
+				#print "Pipe correctly connected"
+				self.of = pipe
+			except:
+				print "Unexpected error:", sys.exc_info()[0]
+        else:
+			self.__create_fifo()
 
     def __create_fifo(self):
         try:
@@ -330,22 +368,40 @@ class FifoOutHandler(object):
             self.__open_fifo()
 
         if self.of is not None:
-            try:
-                if self.needs_pcap_hdr is True:
-                    self.of.write(pcap_global_hdr)
-                    self.needs_pcap_hdr = False
-                self.of.write(data.pcap)
-                self.of.flush()
-                logger.info('Wrote a frame of size %d bytes' % (data.len))
-                stats['Piped'] += 1
-            except IOError as e:
-                if e.errno == errno.EPIPE:
-                    logger.info('Remote end stopped reading')
-                    stats['Not Piped'] += 1
-                    self.of = None
-                    self.needs_pcap_hdr = True
-                else:
-                    raise
+            if platform.system() == 'Windows':
+				try:
+					if self.needs_pcap_hdr is True:
+						win32file.WriteFile(self.of, pcap_global_hdr) #self.of.write(pcap_global_hdr)
+						self.needs_pcap_hdr = False
+					win32file.WriteFile(self.of, data.pcap) #self.of.write(data.pcap)
+					#self.of.flush()
+					logger.info('Wrote a frame of size %d bytes' % (data.len))
+					stats['Piped'] += 1
+				except IOError as e:
+					if e.errno == errno.EPIPE:
+						logger.info('Remote end stopped reading')
+						stats['Not Piped'] += 1
+						self.of = None
+						self.needs_pcap_hdr = True
+					else:
+						raise
+            else:
+				try:
+					if self.needs_pcap_hdr is True:
+						self.of.write(pcap_global_hdr)
+						self.needs_pcap_hdr = False
+					self.of.write(data.pcap)
+					self.of.flush()
+					logger.info('Wrote a frame of size %d bytes' % (data.len))
+					stats['Piped'] += 1
+				except IOError as e:
+					if e.errno == errno.EPIPE:
+						logger.info('Remote end stopped reading')
+						stats['Not Piped'] += 1
+						self.of = None
+						self.needs_pcap_hdr = True
+					else:
+						raise
 #####################################
 class PcapDumpOutHandler(object):
     def __init__(self, out_pcap):
