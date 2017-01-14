@@ -45,35 +45,31 @@ import errno
 import logging
 import logging.handlers
 import struct
+import subprocess
 import platform
-if platform.system() == 'Windows':
+
+try:
     import win32pipe, win32file
-    import subprocess
-	
-	#open Wireshark
-    wireshark_cmd=['C:\Program Files\Wireshark\Wireshark.exe', r'-i\\.\pipe\wireshark','-k']
-    proc=subprocess.Popen(wireshark_cmd)
+except ImportError:
+    pass
 #####################################
 ### Constants
 #####################################
-__version__ = '1.2.1'
+__version__ = '1.3'
 #####################################
 ### Default configuration values
 #####################################
-if platform.system() == 'Windows':
-    serialPort='COM1'
-else:
-    serialPort='/dev/ttyUSB0'
 defaults = {
-        'device': serialPort,
-        'baud_rate': 460800,
-        'out_file': 'sensniff.hexdump',
-        'out_fifo': '/tmp/sensniff',
-        'out_pcap': 'sensniff.pcap',
-        'debug_level': 'WARN',
-        'log_level': 'INFO',
-        'log_file': 'sensniff.log',
-	}
+    'device': 'COM1' if platform.system() == 'Windows' else '/dev/ttyUSB0',
+    'baud_rate': 460800,
+    'out_file': 'sensniff.hexdump',
+    'out_fifo': '/tmp/sensniff',
+    'out_pcap': 'sensniff.pcap',
+    'debug_level': 'WARN',
+    'log_level': 'INFO',
+    'log_file': 'sensniff.log',
+    'ws_path': 'C:\Program Files\Wireshark'
+}
 #####################################
 ### PCAP and Command constants
 #####################################
@@ -291,35 +287,64 @@ class SerialInputHandler(object):
 
     def get_channel_max(self):
         self.__write_command(CMD_GET_CHANNEL_MAX)
-
 #####################################
-class FifoOutHandler(object):
-    def __init__(self, out_fifo):
-        self.out_fifo = out_fifo
+class StreamToWsHandler(object):
+    def __init__(self):
         self.of = None
         self.needs_pcap_hdr = True
         stats['Piped'] = 0
         stats['Not Piped'] = 0
 
-        if platform.system() == 'Windows' :
-            try:
-                pipe = win32pipe.CreateNamedPipe(
-                    r'\\.\pipe\wireshark',
-                    win32pipe.PIPE_ACCESS_OUTBOUND,
-                    win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_WAIT,
-                    1, 65536, 65536,
-                    300,
-                    None)
-                print "Pipe correctly created"
-                #proc=subprocess.Popen(wireshark_cmd)
-                #print "Wireshark opened"
-                win32pipe.ConnectNamedPipe(pipe, None)
-                #print "Pipe correctly connected"
-                self.of = pipe
-            except:
-                print "Unexpected error:", sys.exc_info()[0]
+    @staticmethod
+    def create(out_fifo, ws_path):
+        if platform.system() == 'Windows':
+            return(WinPipeOutHandler(out_fifo, ws_path))
         else:
-            self.__create_fifo()
+            return(FifoOutHandler(out_fifo))
+#####################################
+class WinPipeOutHandler(StreamToWsHandler):
+    def __init__(self, out_fifo, ws_path):
+        super(WinPipeOutHandler, self).__init__()
+        self.named_pipe = r'\\.\pipe\wireshark'
+
+        try:
+            pipe = win32pipe.CreateNamedPipe(self.named_pipe,
+                                             win32pipe.PIPE_ACCESS_OUTBOUND,
+                                             win32pipe.PIPE_TYPE_MESSAGE |
+                                                 win32pipe.PIPE_WAIT,
+                                             1, 65536, 65536, 300, None)
+            logger.info('Named pipe correctly created')
+            win32pipe.ConnectNamedPipe(pipe, None)
+            self.of = pipe
+            proc = subprocess.Popen([os.path.join(ws_path, 'Wireshark.exe'),
+                                    '-i' + self.named_pipe, '-k'])
+        except:
+            logger.error('Unexpected error: %s' % (sys.exc_info()[0],))
+            sys.exit(1)
+
+    def handle(self, data):
+        if self.of is not None:
+            try:
+                if self.needs_pcap_hdr is True:
+                    win32file.WriteFile(self.of, pcap_global_hdr)
+                    self.needs_pcap_hdr = False
+                win32file.WriteFile(self.of, data.pcap)
+                logger.info('Wrote a frame of size %d bytes' % (data.len))
+                stats['Piped'] += 1
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    logger.info('Remote end stopped reading')
+                    stats['Not Piped'] += 1
+                    self.of = None
+                    self.needs_pcap_hdr = True
+                else:
+                    raise
+#####################################
+class FifoOutHandler(StreamToWsHandler):
+    def __init__(self, out_fifo):
+        super(FifoOutHandler, self).__init__()
+        self.out_fifo = out_fifo
+        self.__create_fifo()
 
     def __create_fifo(self):
         try:
@@ -360,40 +385,22 @@ class FifoOutHandler(object):
             self.__open_fifo()
 
         if self.of is not None:
-            if platform.system() == 'Windows':
-                try:
-                    if self.needs_pcap_hdr is True:
-                        win32file.WriteFile(self.of, pcap_global_hdr) #self.of.write(pcap_global_hdr)
-                        self.needs_pcap_hdr = False
-                    win32file.WriteFile(self.of, data.pcap) #self.of.write(data.pcap)
-                    #self.of.flush()
-                    logger.info('Wrote a frame of size %d bytes' % (data.len))
-                    stats['Piped'] += 1
-                except IOError as e:
-                    if e.errno == errno.EPIPE:
-                        logger.info('Remote end stopped reading')
-                        stats['Not Piped'] += 1
-                        self.of = None
-                        self.needs_pcap_hdr = True
-                    else:
-                        raise
-            else:
-                try:
-                    if self.needs_pcap_hdr is True:
-                        self.of.write(pcap_global_hdr)
-                        self.needs_pcap_hdr = False
-                    self.of.write(data.pcap)
-                    self.of.flush()
-                    logger.info('Wrote a frame of size %d bytes' % (data.len))
-                    stats['Piped'] += 1
-                except IOError as e:
-                    if e.errno == errno.EPIPE:
-                        logger.info('Remote end stopped reading')
-                        stats['Not Piped'] += 1
-                        self.of = None
-                        self.needs_pcap_hdr = True
-                    else:
-                        raise
+            try:
+                if self.needs_pcap_hdr is True:
+                    self.of.write(pcap_global_hdr)
+                    self.needs_pcap_hdr = False
+                self.of.write(data.pcap)
+                self.of.flush()
+                logger.info('Wrote a frame of size %d bytes' % (data.len))
+                stats['Piped'] += 1
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    logger.info('Remote end stopped reading')
+                    stats['Not Piped'] += 1
+                    self.of = None
+                    self.needs_pcap_hdr = True
+                else:
+                    raise
 #####################################
 class PcapDumpOutHandler(object):
     def __init__(self, out_pcap):
@@ -492,11 +499,17 @@ def arg_parser():
     out_group.add_argument('-F', '--fifo', action = 'store',
                            default = defaults['out_fifo'],
                            help = 'Pipe the capture through FIFO \
-                                   (Default: %s)' % (defaults['out_fifo'],))
+                                   (Default: %s). Ignored on Windows.'
+                                   % (defaults['out_fifo'],))
     out_group.add_argument('-O', '--offline', action = 'store_true',
                            default = False,
                            help = 'Disable piping (Mainly used for debugging) \
                                    (Default: Piping enabled)')
+    out_group.add_argument('-W', '--ws-path', action = 'store',
+                           default = defaults['ws_path'],
+                           help = 'Wireshark installation path (Windows \
+                                   only). (Default: %s)'
+                                   % (defaults['ws_path'],))
 
     log_group = parser.add_argument_group('Verbosity and Logging')
     log_group.add_argument('-n', '--non-interactive', action = 'store_true',
@@ -565,8 +578,7 @@ if __name__ == '__main__':
 
     out_handlers = []
     if args.offline is not True:
-        f = FifoOutHandler(out_fifo = args.fifo)
-        out_handlers.append(f)
+        out_handlers.append(StreamToWsHandler.create(args.fifo, args.ws_path))
     if args.out_file is not False:
         out_handlers.append(HexdumpOutHandler(of = args.out_file))
     if args.pcap is not False:
