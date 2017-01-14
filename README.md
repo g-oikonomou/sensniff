@@ -12,7 +12,9 @@ Other than network packet capture, the host can send commands to the peripheral 
 
 sensniff is distributed under the terms of the 3-clause BSD license. See [LICENSE](https://github.com/g-oikonomou/sensniff/blob/master/LICENSE).
 
-sensniff has been developed and tested on Ubuntu and Mac OS X. sensniff does not work on Windows (and most likely never will).
+sensniff has been developed and tested on Ubuntu and Mac OS X.
+
+Windows support (experimental), thanks to @yerpj.
 
 How to Use
 ==========
@@ -77,6 +79,17 @@ In older versions of Wireshark, go to Capture -> Options and type `/tmp/sensniff
 You don't need root priviledges.
 
 The first time your run this, you will need to open Wireshark's preferences and select 'TI CC24xx FCS format' under Protocols -> IEEE 802.15.4. You will also need to correctly configure contexts under 6LoWPAN.
+
+### Windows specifics
+
+On windows, the script will fire up wireshark automatically. To do so, the script will look for `Wireshark.exe` in the default install location. If wireshark is installed somewhere else, specify the path to `Wireshark.exe` using the `-W` or `--ws-path` command line argument. For example:
+
+`python sensniff.py -W "D:\George\progs\"`
+
+There are some limitations:
+
+* You will most likely not be able to stop and restart the capture from inside wireshark while the script is still running.
+* You will not be able to run the script with wireshark already open.
 
 Project Status
 ==============
