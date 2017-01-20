@@ -308,6 +308,8 @@ class WinPipeOutHandler(StreamToWsHandler):
         self.named_pipe = r'\\.\pipe\wireshark'
 
         try:
+            proc = subprocess.Popen([os.path.join(ws_path, 'Wireshark.exe'),
+                                    '-i' + self.named_pipe, '-k'])
             pipe = win32pipe.CreateNamedPipe(self.named_pipe,
                                              win32pipe.PIPE_ACCESS_OUTBOUND,
                                              win32pipe.PIPE_TYPE_MESSAGE |
@@ -316,8 +318,6 @@ class WinPipeOutHandler(StreamToWsHandler):
             logger.info('Named pipe correctly created')
             win32pipe.ConnectNamedPipe(pipe, None)
             self.of = pipe
-            proc = subprocess.Popen([os.path.join(ws_path, 'Wireshark.exe'),
-                                    '-i' + self.named_pipe, '-k'])
         except:
             logger.error('Unexpected error: %s' % (sys.exc_info()[0],))
             sys.exit(1)
