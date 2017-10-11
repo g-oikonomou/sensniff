@@ -201,7 +201,9 @@ class SerialInputHandler(object):
         # If we reach here, we have a packet of proto ver SNIFFER_PROTO_VERSION
         # Read CMD and LEN
         try:
+            size = 0
             b = self.port.read(3)
+            size = len(b)
 
         except (IOError, OSError) as e:
             logger.error('Error reading port: %s' % (self.port.port,))
