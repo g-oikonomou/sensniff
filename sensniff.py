@@ -168,7 +168,10 @@ class SerialInputHandler(object):
         if b[0:4] not in (self.__sensniff_magic, self.__sensniff_magic_legacy):
             # Peripheral UART output - print it
             per_out = self.port.readline().rstrip()
-            logger.info("Peripheral: %s%s" % (b.decode(), per_out.decode()))
+            try:
+                logger.info("Peripheral: %s%s" % (b.decode(), per_out.decode()))
+            except UnicodeDecodeError, e:
+                logger.info("Error decoding peripheral output: %s"%e)
             stats['Non-Frame'] += 1
             return ''
 
@@ -201,7 +204,9 @@ class SerialInputHandler(object):
         # If we reach here, we have a packet of proto ver SNIFFER_PROTO_VERSION
         # Read CMD and LEN
         try:
+            size = 0
             b = self.port.read(3)
+            size = len(b)
 
         except (IOError, OSError) as e:
             logger.error('Error reading port: %s' % (self.port.port,))
