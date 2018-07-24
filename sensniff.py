@@ -170,7 +170,7 @@ class SerialInputHandler(object):
             per_out = self.port.readline().rstrip()
             try:
                 logger.info("Peripheral: %s%s" % (b.decode(), per_out.decode()))
-            except UnicodeDecodeError, e:
+            except UnicodeDecodeError as e:
                 logger.info("Error decoding peripheral output: %s"%e)
             stats['Non-Frame'] += 1
             return ''
