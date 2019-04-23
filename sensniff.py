@@ -530,18 +530,18 @@ if __name__ == '__main__':
         out_handlers.append(PcapDumpOutHandler(args.pcap))
 
     if args.non_interactive is False:
-        h = ("Commands:\n"
-             "c: Print current RF Channel\n"
-             "m: Print Min RF Channel\n"
-             "M: Print Max RF Channel\n"
-             "n: Trigger new pcap header before the next frame\n"
-             "h,?: Print this message\n"
-             "<number>: Change RF channel.\n"
-             "q: Quit")
+        help_str = ("Commands:\n"
+                    "c: Print current RF Channel\n"
+                    "m: Print Min RF Channel\n"
+                    "M: Print Max RF Channel\n"
+                    "n: Trigger new pcap header before the next frame\n"
+                    "h,?: Print this message\n"
+                    "<number>: Change RF channel.\n"
+                    "q: Quit")
 
-        e = 'Unknown Command. Type h or ? for help'
+        err_str = 'Unknown Command. Type h or ? for help'
 
-        print(h)
+        print(help_str)
 
         in_handler.get_channel()
 
@@ -552,7 +552,7 @@ if __name__ == '__main__':
                     cmd = sys.stdin.readline().strip()
                     logger.info('User input: "%s"' % (cmd,))
                     if cmd in ('h', '?'):
-                        print(h)
+                        print(help_str)
                     elif cmd == 'c':
                         in_handler.get_channel()
                     elif cmd == 'm':
@@ -572,7 +572,7 @@ if __name__ == '__main__':
             except select.error:
                 logger.warn('Error while trying to read stdin')
             except ValueError:
-                print(e)
+                print(err_str)
             except UnboundLocalError:
                 # Raised by command 'n' when -o was specified at command line
                 pass
