@@ -160,7 +160,7 @@ class SerialInputHandler(object):
         if size == 0:
             return b
         if size < 5:
-            logger.warn('Read %d bytes but not part of a frame'
+            logger.warning('Read %d bytes but not part of a frame'
                          % (size,))
             self.port.flushInput()
             return ''
@@ -192,8 +192,8 @@ class SerialInputHandler(object):
             if len(b) != size:
                 # We got the magic right but subsequent bytes did not match
                 # what we expected to receive
-                logger.warn('Read correct magic not followed by a frame')
-                logger.warn('Expected %d bytes, got %d' % (size, len(b)))
+                logger.warning('Read correct magic not followed by a frame')
+                logger.warning('Expected %d bytes, got %d' % (size, len(b)))
                 self.port.flushInput()
                 return ''
 
@@ -214,8 +214,8 @@ class SerialInputHandler(object):
             sys.exit(1)
 
         if size < 3:
-            logger.warn('Read correct magic not followed by a frame header')
-            logger.warn('Expected 3 bytes, got %d' % (len(b), ))
+            logger.warning('Read correct magic not followed by a frame header')
+            logger.warning('Expected 3 bytes, got %d' % (len(b), ))
             self.port.flushInput()
             return ''
 
@@ -224,7 +224,7 @@ class SerialInputHandler(object):
         length = b[1] << 8 | b[2]
 
         if cmd == CMD_ERR_NOT_SUPPORTED:
-            logger.warn("Peripheral reports unsupported command")
+            logger.warning("Peripheral reports unsupported command")
             return ''
 
         # Read the frame or command response
@@ -232,8 +232,8 @@ class SerialInputHandler(object):
         if len(b) != length:
             # We got the magic right but subsequent bytes did not match
             # what we expected to receive
-            logger.warn('Read correct header not followed by a frame')
-            logger.warn('Expected %d bytes, got %d' % (length, len(b)))
+            logger.warning('Read correct header not followed by a frame')
+            logger.warning('Expected %d bytes, got %d' % (length, len(b)))
             self.port.flushInput()
             return ''
 
@@ -255,7 +255,7 @@ class SerialInputHandler(object):
         elif cmd == CMD_CHANNEL_MAX:
             print('Max channel: %d' % (b[0],))
         else:
-            logger.warn("Received a command response with unknown code")
+            logger.warning("Received a command response with unknown code")
         return ''
 
     def __write_command(self, cmd, len = 0, data = bytearray()):
@@ -307,7 +307,7 @@ class FifoOutHandler(object):
                                  % (self.out_fifo,))
                     sys.exit(1)
                 else:
-                    logger.warn('FIFO %s exists. Using it' % (self.out_fifo,))
+                    logger.warning('FIFO %s exists. Using it' % (self.out_fifo,))
             else:
                 raise
 
@@ -317,7 +317,7 @@ class FifoOutHandler(object):
             self.of = os.fdopen(fd, 'wb')
         except OSError as e:
             if e.errno == errno.ENXIO:
-                logger.warn('Remote end not reading')
+                logger.warning('Remote end not reading')
                 stats['Not Piped'] += 1
                 self.of = None
                 self.needs_pcap_hdr = True
@@ -363,9 +363,9 @@ class PcapDumpOutHandler(object):
             logger.info("Dumping PCAP to %s" % (self.out_pcap,))
         except IOError as e:
             self.of = None
-            logger.warn("Error opening %s to save pcap. Skipping"
+            logger.warning("Error opening %s to save pcap. Skipping"
                          % (out_pcap))
-            logger.warn("The error was: %d - %s"
+            logger.warning("The error was: %d - %s"
                          % (e.args))
 
     def handle(self, frame):
@@ -384,9 +384,9 @@ class HexdumpOutHandler(object):
             self.of = open(of, 'w')
             logger.info("Dumping hex to %s" % (of,))
         except IOError as e:
-            logger.warn("Error opening %s for hex dumps. Skipping"
+            logger.warning("Error opening %s for hex dumps. Skipping"
                          % (of))
-            logger.warn("The error was: %d - %s" % (e.args))
+            logger.warning("The error was: %d - %s" % (e.args))
             self.of = None
 
     def handle(self, frame):
@@ -402,9 +402,9 @@ class HexdumpOutHandler(object):
             logger.info('HexdumpOutHandler: Dumped a frame of size %d bytes'
                          % (frame.len))
         except IOError as e:
-            logger.warn("Error writing hex to %s for hex dumps. Skipping"
+            logger.warning("Error writing hex to %s for hex dumps. Skipping"
                      % (self.of))
-            logger.warn("The error was: %d - %s" % (e.args))
+            logger.warning("The error was: %d - %s" % (e.args))
 #####################################
 def arg_parser():
     debug_choices = ('DEBUG', 'INFO', 'WARN', 'ERROR')
@@ -570,7 +570,7 @@ if __name__ == '__main__':
                     else:
                         raise ValueError
             except select.error:
-                logger.warn('Error while trying to read stdin')
+                logger.warning('Error while trying to read stdin')
             except ValueError:
                 print(err_str)
             except UnboundLocalError:
