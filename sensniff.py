@@ -32,7 +32,6 @@
 # In interactive mode, the user can also input commands from stdin
 
 # ToDo:
-# * Python 3 support
 # * Configuration file support (ConfigParser ?)
 import serial
 import argparse
